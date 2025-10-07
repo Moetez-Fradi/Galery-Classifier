@@ -34,7 +34,19 @@ def load_images_for_resnet(data_dir):
     y = tf.keras.utils.to_categorical(y, num_classes=len(class_names))
     return X, y, class_names
 
-def load_unlabeled_images(data_dir):
+def unlabeled_image_generator(data_dir, batch_size=32):
+    filenames = [f for f in os.listdir(data_dir) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
+    while True:
+        np.random.shuffle(filenames)
+        for i in range(0, len(filenames), batch_size):
+            batch_files = filenames[i:i+batch_size]
+            batch_imgs = []
+            for f in batch_files:
+                img_path = os.path.join(data_dir, f)
+                img = Image.open(img_path).convert("RGB").resize((224,224))
+                arr = preprocess_input(np.array(img))
+                batch_imgs.append(arr)
+            yield np.array(batch_imgs, dtype=np.float32), np.array(batch_files)
     X = []
 
     for filename in os.listdir(data_dir):
